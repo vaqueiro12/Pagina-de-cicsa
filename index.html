@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CICSA — Plataforma de capacitación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="hazard"></div>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark" style="width:52px;height:52px;font-size:20px;">CI</div>
+      <div class="login-title">CICSA · Capacitación</div>
+      <div class="login-sub">Inicia sesión para continuar</div>
+    </div>
+
+    <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;">Ingresar como</label>
+    <div class="role-picker" style="margin-top:8px;">
+      <div class="role-opt selected" id="roleOptTrabajador" onclick="selectRole('trabajador')">👷 Trabajador</div>
+      <div class="role-opt" id="roleOptAdmin" onclick="selectRole('admin')">🛠 Administrador</div>
+    </div>
+
+    <!-- TRABAJADOR -->
+    <div class="field" id="loginNameWrap">
+      <label>Escribe tu nombre</label>
+      <input id="loginNameInput" type="text" list="rosterNamesList" placeholder="Ej. Juan Carlos Pérez Domínguez" oninput="onLoginNameInput()" autocomplete="off">
+      <datalist id="rosterNamesList"></datalist>
+    </div>
+    <div id="loginNameWarning" class="hidden" style="font-size:12px;color:var(--red);margin-top:-12px;margin-bottom:14px;">No encontramos ese nombre en la lista de trabajadores autorizados. Verifica con el administrador.</div>
+    <div class="field hidden" id="loginAreaWrap">
+      <label>Área / Puesto</label>
+      <input id="loginAreaDisplay" type="text" disabled>
+    </div>
+    <div class="field" id="loginPasswordWrap">
+      <label>Contraseña</label>
+      <input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+    </div>
+
+    <!-- ADMINISTRADOR -->
+    <div class="field hidden" id="loginAdminNameWrap">
+      <label>Nombre del administrador</label>
+      <input id="loginAdminName" type="text" placeholder="Ej. Alexis Vaqueiro" autocomplete="username">
+    </div>
+    <div class="field hidden" id="loginAdminPasswordWrap">
+      <label>Contraseña de administrador</label>
+      <input id="loginAdminPassword" type="password" placeholder="Contraseña de administrador" autocomplete="current-password">
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">Entrar</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px;" id="forgotBtn" onclick="requestPasswordReset()">Solicitar restablecimiento de contraseña</button>
+    <div class="login-note">Mejoras proximamente.</div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <nav>
+    <div class="brand">
+      <div class="brand-mark">CI</div>
+      <div class="brand-text">
+        <div class="brand-name">CICSA</div>
+        <div class="brand-sub">Ciudad del Carmen · Capacitación</div>
+      </div>
+    </div>
+    <div class="navlinks">
+      <a id="navTrabajador" onclick="showView('trabajador')">Mis cursos</a>
+      <a id="navPerfil" onclick="showView('perfil')">Mi perfil</a>
+      <a id="navAdmin" onclick="showView('admin')" class="hidden">Panel administrador</a>
+    </div>
+    <div class="who">
+      <span class="who-badge" id="whoBadge"></span>
+      <span id="whoName" class="who-name" style="font-size:13px;font-weight:600;"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </nav>
+
+  <!-- ---------- VISTA TRABAJADOR: CURSOS ---------- -->
+  <div id="viewTrabajador">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Capacitación interna · CICSA</div>
+        <h1>Personal capacitado, <em>operación segura.</em></h1>
+        <p class="lead">Revisa el contenido de cada curso, presenta el examen final y obtén tu constancia oficial al aprobarlo.</p>
+      </div>
+      <div class="ring-card">
+        <div class="ring-wrap">
+          <svg width="164" height="164" viewBox="0 0 172 172">
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#F2872E"/>
+                <stop offset="100%" stop-color="#E23B2E"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="86" cy="86" r="74"></circle>
+            <circle class="ring-fg" id="ringFg" cx="86" cy="86" r="74" stroke-dasharray="465" stroke-dashoffset="465"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="num" id="ringPct">0%</div>
+            <div class="lbl">Completado</div>
+          </div>
+        </div>
+        <div class="ring-stats">
+          <div class="ring-stat"><div class="v" id="hoursDone">0</div><div class="k">Horas hechas</div></div>
+          <div class="ring-stat"><div class="v" id="hoursTotal">0</div><div class="k">Horas totales</div></div>
+          <div class="ring-stat"><div class="v" id="modsDone">0/0</div><div class="k">Cursos</div></div>
+        </div>
+      </div>
+    </div>
+
+    <section id="modulos">
+      <div class="section-head">
+        <div>
+          <h2>Cursos asignados</h2>
+          <p>Abre el curso para ver su contenido y presentar el examen final.</p>
+        </div>
+      </div>
+      <div class="modules-grid" id="modulesGrid"></div>
+    </section>
+  </div>
+
+  <!-- ---------- VISTA CURSO (visor a pantalla completa del trabajador) ---------- -->
+  <div id="viewCurso" class="hidden">
+    <div class="player-head">
+      <div>
+        <div class="eyebrow">Curso en curso · CICSA</div>
+        <h1 id="playerTitle">—</h1>
+        <p class="lead" id="playerDesc"></p>
+        <div class="module-meta" id="playerMeta" style="margin-top:12px;"></div>
+        <div id="playerScore" class="module-score hidden" style="margin-top:6px;"></div>
+      </div>
+      <div class="player-progress-card">
+        <div class="player-progress-num" id="playerPct">0%</div>
+        <div class="player-progress-lbl">de avance en este curso</div>
+        <div class="module-bar" style="margin-top:12px;"><div id="playerBar" style="width:0%"></div></div>
+        <div class="player-progress-sub" id="playerProgressSub"></div>
+      </div>
+    </div>
+
+    <div class="player-layout">
+      <aside class="player-sidebar">
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:14px;" onclick="closeCourseViewer()">← Volver a mis cursos</button>
+        <div class="player-sidebar-title">Módulos del curso</div>
+        <div id="playerModuleList"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="openQuiz(viewerCourseIndex)">📝 Presentar examen final</button>
+        <div class="player-quiz-hint" id="playerQuizHint"></div>
+      </aside>
+      <div class="player-content" id="playerContent"></div>
+    </div>
+  </div>
+
+  <!-- ---------- VISTA PERFIL (trabajador) ---------- -->
+  <div id="viewPerfil" class="hidden">
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>Mi perfil</h2>
+          <p>Tu avance general, estado de cada curso y tus constancias obtenidas.</p>
+        </div>
+      </div>
+      <div id="profileContent"></div>
+    </section>
+  </div>
+
+  <!-- ---------- VISTA ADMIN ---------- -->
+  <div id="viewAdmin" class="hidden">
+    <section>
+      <div class="section-head admin-title-row">
+        <div>
+          <div class="eyebrow">CONTROL ADMINISTRATIVO · CICSA</div>
+          <h2>Panel de administración</h2>
+          <p>Supervisa trabajadores, actividad, cursos, evaluaciones y constancias.</p>
+        </div>
+      </div>
+
+      <!-- RESUMEN DEL ADMINISTRADOR -->
+      <div class="admin-stats">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">👥</div>
+          <div><div class="admin-stat-number" id="adminTotalWorkers">0</div><div class="admin-stat-label">Trabajadores registrados</div></div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">🟢</div>
+          <div><div class="admin-stat-number" id="adminActiveWorkers">0</div><div class="admin-stat-label">Activos recientemente</div></div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">🔴</div>
+          <div><div class="admin-stat-number" id="adminDisabledWorkers">0</div><div class="admin-stat-label">Cuentas desactivadas</div></div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+
+        <!-- ACTIVIDAD -->
+        <div class="panel">
+          <div class="panel-head-flex">
+            <div>
+              <h3>Actividad de trabajadores</h3>
+              <p class="panel-help">Aquí el administrador puede ver quién está activo, quién lleva días sin entrar y quién nunca ha iniciado sesión.</p>
+            </div>
+          </div>
+          <div class="filters">
+            <select id="filterActividad" onchange="renderActivityTable()">
+              <option value="todos">Todos</option>
+              <option value="reciente">Activos recientemente</option>
+              <option value="dias">Sin actividad reciente</option>
+              <option value="nunca">Nunca han ingresado</option>
+              <option value="desactivado">Desactivados</option>
+            </select>
+            <input id="filterActividadNombre" placeholder="Buscar trabajador o puesto..." oninput="renderActivityTable()">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Trabajador</th><th>Puesto</th><th>Último acceso</th><th>Tiempo</th><th>Estado</th><th>Acción</th></tr></thead>
+              <tbody id="adminActivityTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TRABAJADORES -->
+        <div class="panel">
+          <h3>Trabajadores registrados</h3>
+          <p class="panel-help">Alta, activación, desactivación y administración de contraseñas. Las contraseñas solo se muestran dentro del panel del administrador.</p>
+          <div class="form-row" style="grid-template-columns:1.6fr 1.2fr 1.2fr auto;">
+            <div class="field"><label>Nombre completo</label><input id="newWorkerName" placeholder="Ej. Juan Carlos Pérez Domínguez"></div>
+            <div class="field"><label>Puesto</label><select id="newWorkerArea"></select></div>
+            <div class="field"><label>Contraseña</label><input id="newWorkerPassword" type="password" placeholder="Asignar contraseña" autocomplete="new-password"></div>
+            <button class="btn btn-blue btn-sm" onclick="addRosterWorker()">+ Agregar</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Puesto</th><th>Estado</th><th>Contraseña</th><th>Avance</th><th>Acciones</th></tr></thead>
+              <tbody id="rosterTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SOLICITUDES -->
+        <div class="panel">
+          <h3>Solicitudes de restablecimiento</h3>
+          <p class="panel-help">El trabajador solicita el cambio y el administrador autoriza una nueva contraseña.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Trabajador</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr></thead>
+              <tbody id="resetRequestsTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CURSOS -->
+        <div class="panel">
+          <h3>Cursos del programa</h3>
+          <p class="panel-help">Crea cursos, asigna trabajadores y modifica sus módulos y secciones.</p>
+          <div class="form-row">
+            <div class="field"><label>Título</label><input id="newModTitle" placeholder="Nombre del curso"></div>
+            <div class="field"><label>Horas</label><input id="newModHours" type="number" min="1" value="2"></div>
+            <div class="field"><label>Descripción</label><input id="newModDesc" placeholder="Breve descripción"></div>
+            <div class="field"><label>Imagen del curso</label><input id="newModImage" type="file" accept="image/*" onchange="previewNewCourseImage(event)"><div id="newModImagePreview" class="course-image-preview hidden"></div></div>
+            <button class="btn btn-blue btn-sm" onclick="addModule()">+ Agregar curso</button>
+          </div>
+          <div class="assign-form">
+            <div class="field">
+              <label>Asignar a</label>
+              <select id="newCourseAssignType" onchange="onAssignTypeChange()">
+                <option value="todos">Todos los trabajadores</option>
+                <option value="area">Un puesto / grupo</option>
+                <option value="individual">Trabajadores específicos</option>
+              </select>
+            </div>
+            <div class="field hidden" id="assignAreaWrap"><label>Puesto</label><select id="newCourseAssignArea"></select></div>
+          </div>
+          <div class="field hidden" id="assignWorkersWrap" style="margin-bottom:14px;">
+            <label>Selecciona trabajadores</label>
+            <div class="checkbox-list" id="assignWorkersList"></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Curso</th><th>Horas</th><th>Asignado a</th><th>Contenido</th><th>Examen</th><th>Acciones</th></tr></thead>
+              <tbody id="adminModulesTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- EXÁMENES -->
+        <div class="panel">
+          <h3>Evaluaciones y exámenes</h3>
+          <p class="panel-help">El administrador puede cambiar preguntas, respuestas, respuesta correcta y anexar un examen a un curso.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Curso</th><th>Preguntas</th><th>Mínimo</th><th>Administrar</th></tr></thead>
+              <tbody id="adminQuizTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SEGUIMIENTO -->
+        <div class="panel">
+          <h3>Seguimiento académico</h3>
+          <p class="panel-help">Consulta el avance académico únicamente cuando necesites revisar a un trabajador.</p>
+          <div class="filters">
+            <select id="filterEstado" onchange="renderWorkersTable()">
+              <option value="todos">Todos los estados</option>
+              <option value="completado">Completado (100%)</option>
+              <option value="progreso">En progreso</option>
+              <option value="pendiente">Sin iniciar</option>
+            </select>
+            <input id="filterNombre" placeholder="Buscar por nombre..." oninput="renderWorkersTable()">
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Trabajador</th><th>Avance</th><th>Cursos</th><th>Horas</th><th>Estado</th><th>Perfil</th></tr></thead>
+              <tbody id="adminWorkersTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <footer>Demo de plataforma de capacitación para <b>CICSA</b> — Ciudad del Carmen, Campeche. Datos guardados localmente; pendiente conectar base de datos.</footer>
+</div>
+
+<!-- ===================== MODAL: PERFIL (admin viendo a un trabajador) ===================== -->
+<div id="profileOverlay" class="modal-overlay hidden">
+  <div class="modal-card wide" id="profileModalCard"></div>
+</div>
+
+<!-- ===================== MODAL: CONTENIDO DEL CURSO ===================== -->
+<div id="courseContentOverlay" class="modal-overlay hidden">
+  <div class="modal-card wide" id="courseContentCard"></div>
+</div>
+
+<!-- ===================== MODAL: EDITOR DE CONTENIDO (admin) ===================== -->
+<div id="courseEditorOverlay" class="modal-overlay hidden">
+  <div class="modal-card wide" id="courseEditorCard"></div>
+</div>
+
+<!-- ===================== MODAL: EDITOR DE EXAMEN ===================== -->
+<div id="quizEditorOverlay" class="modal-overlay hidden">
+  <div class="modal-card wide" id="quizEditorCard"></div>
+</div>
+
+<!-- ===================== MODAL: CONTRASEÑA (admin) ===================== -->
+<div id="passwordOverlay" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 id="passwordModalTitle">Contraseña</h3>
+    <div class="modal-sub">El administrador puede consultar la contraseña actual o establecer una nueva.</div>
+    <div class="field">
+      <label>Contraseña actual</label>
+      <div class="password-input-wrap">
+        <input id="currentPasswordModal" type="password" autocomplete="off" readonly>
+        <button type="button" class="password-eye" id="toggleCurrentPasswordBtn" title="Mostrar contraseña" onclick="toggleCurrentPassword()">👁️</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <div class="password-input-wrap">
+        <input id="newPasswordModal" type="password" autocomplete="new-password" placeholder="Escribe una nueva contraseña">
+        <button type="button" class="password-eye" id="toggleNewPasswordBtn" title="Mostrar contraseña" onclick="toggleNewPassword()">👁️</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closePasswordModal()">Cancelar</button>
+      <button class="btn btn-blue btn-sm" onclick="savePasswordModal()">Guardar nueva contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EVALUACIÓN ===================== -->
+<div id="quizOverlay" class="modal-overlay hidden">
+  <div class="modal-card" id="quizCard"></div>
+</div>
+
+<!-- ===================== CONSTANCIA (oculta, se llena y se imprime) ===================== -->
+<div id="certPrintWrap" class="hidden">
+  <div class="certificate" id="certificate">
+    <div class="cert-inner">
+      <div class="cert-eyebrow">Constancia de capacitación</div>
+      <div class="cert-title">CICSA otorga la presente a</div>
+      <div class="cert-name" id="certName">—</div>
+      <div class="cert-body">
+        Por haber completado satisfactoriamente el curso <b id="certCourse">—</b>,
+        cubriendo <b id="certHours">0</b> horas, correspondientes al puesto de <b id="certArea">—</b>.
+      </div>
+      <div class="cert-footer">
+        <div class="cert-sig"><div class="line"></div>Responsable de Capacitación</div>
+        <div class="cert-seal">SELLO<br>CICSA</div>
+        <div class="cert-date" id="certDate">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
