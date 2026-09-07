@@ -11,6 +11,7 @@ const LS_ROSTER = 'cicsa_roster_v1';
 const LS_RESET_REQUESTS = 'cicsa_reset_requests_v1';
 const LS_ADMINS = 'cicsa_admins_v1';
 const LS_COURSES_MIGRATION = 'cicsa_courses_migration_v1';
+const FIRE_COURSE_MIGRATION = 'prevencion_incendios_contenido_v2';
 
 const APPROVAL_THRESHOLD = 70; // RF-035: calificación mínima aprobatoria (%)
 
@@ -104,19 +105,34 @@ const defaultCourses = [
   },
   {
     title:"Prevención y control de incendios",
-    desc:"Aprende cómo se origina un incendio, cómo prevenirlo y cómo usar correctamente un extintor en las instalaciones.",
-    hours:2,
+    desc:"Programa integral para reconocer riesgos, prevenir incendios, responder ante una emergencia y utilizar correctamente los equipos contra incendio.",
+    hours:6,
+    image:"imagenes/cursos/incendios.jpg",
     assignment:{ type:'todos', area:null, workers:[] },
     modules:[
       { title:"Fundamentos del fuego", sections:[
-        { title:"El triángulo del fuego", content:"Para que exista fuego se necesitan tres elementos al mismo tiempo: combustible (material que arde), oxígeno (el aire) y calor (fuente de ignición). Si eliminas cualquiera de los tres, el fuego se apaga." },
-        { title:"Clases de fuego", content:"Clase A: sólidos como madera, papel y cartón. Clase B: líquidos inflamables como gasolina, diésel y solventes. Clase C: equipos eléctricos energizados. Clase D: metales combustibles. Identificar la clase de fuego es clave para elegir el extintor correcto." },
-        { title:"Cómo se propaga un incendio", content:"El fuego se propaga por contacto directo con las llamas, por radiación de calor hacia materiales cercanos y por convección, cuando el aire y los gases calientes suben y encienden objetos en niveles superiores." },
+        { title:"El triángulo y el tetraedro del fuego", content:"Para que exista fuego se necesitan combustible, oxígeno y calor. La reacción en cadena mantiene la combustión; por eso el tetraedro del fuego agrega este cuarto elemento. Eliminar cualquiera de ellos ayuda a controlar el incendio." },
+        { title:"Clases de fuego", content:"Clase A: sólidos como madera, papel y cartón. Clase B: líquidos inflamables como gasolina, diésel y solventes. Clase C: equipos eléctricos energizados. Clase D: metales combustibles. Identificar la clase determina el agente extintor adecuado." },
+        { title:"Transferencia y propagación del calor", content:"El fuego se propaga por conducción a través de materiales, por radiación hacia objetos cercanos y por convección cuando los gases calientes ascienden. Reconocer estas rutas permite anticipar puntos de propagación." },
+        { title:"Productos de la combustión", content:"El humo, los gases tóxicos y la reducción de oxígeno pueden ser más peligrosos que las llamas. Nunca ingreses a una zona con humo sin autorización, equipo y procedimiento de emergencia." },
       ]},
-      { title:"Prevención y respuesta ante un incendio", sections:[
-        { title:"Medidas de prevención", content:"Mantén las áreas limpias y libres de materiales inflamables, no sobrecargues contactos eléctricos, almacena los químicos en sus contenedores autorizados y nunca bloquees los extintores, gabinetes ni las rutas de evacuación." },
-        { title:"Qué hacer al descubrir un incendio", content:"Mantén la calma, activa la alarma o avisa de inmediato a tu supervisor, delimita la zona y evacúa siguiendo la ruta señalada. Solo intenta apagar el fuego si es pequeño, está en su etapa inicial y cuentas con el extintor adecuado." },
-        { title:"Uso del extintor: técnica PASS", content:"P: Pull — retira el pasador de seguridad. A: Aim — apunta la manguera a la base de las llamas. S: Squeeze — presiona la palanca. S: Sweep — barre de lado a lado hasta extinguir. Mantén siempre una salida a tu espalda." },
+      { title:"Prevención de incendios", sections:[
+        { title:"Orden, limpieza y control de fuentes de ignición", content:"Mantén las áreas limpias, retira residuos combustibles, controla trabajos en caliente y evita fumar fuera de las zonas autorizadas. Reporta de inmediato chispas, fugas, calentamientos anormales u olores a quemado." },
+        { title:"Seguridad eléctrica", content:"No sobrecargues contactos, no uses cables dañados y desconecta equipos cuando el procedimiento lo indique. Las reparaciones y tableros eléctricos deben ser atendidos por personal autorizado." },
+        { title:"Almacenamiento de sustancias inflamables", content:"Conserva químicos y combustibles en recipientes autorizados, etiquetados y cerrados. Mantén separación de fuentes de calor y revisa que exista ventilación adecuada." },
+        { title:"Inspección de equipos y rutas", content:"Verifica que extintores, gabinetes, alarmas, salidas y rutas de evacuación estén visibles, señalizados, accesibles y sin obstrucciones." },
+      ]},
+      { title:"Respuesta y evacuación", sections:[
+        { title:"Activación de la emergencia", content:"Al descubrir humo o fuego, conserva la calma, activa la alarma y avisa al supervisor indicando el lugar exacto. No pongas en riesgo tu integridad para recuperar objetos." },
+        { title:"Evacuación segura", content:"Dirígete por la ruta señalada al punto de reunión, camina sin correr, no uses elevadores y ayuda a las personas que lo necesiten sin separarte del grupo." },
+        { title:"Comunicación y reporte", content:"Proporciona información clara: ubicación, tamaño aproximado, materiales involucrados y personas expuestas. No regreses al área hasta recibir autorización oficial." },
+        { title:"Punto de reunión y conteo", content:"Permanece en el punto de reunión para el conteo de personal y reporta si alguien falta. Sigue las instrucciones de la brigada y de los servicios de emergencia." },
+      ]},
+      { title:"Extintores y control inicial", sections:[
+        { title:"Selección del extintor", content:"Elige el extintor según la clase de fuego y las instrucciones de la etiqueta. Nunca uses agua en un incendio eléctrico energizado o de líquidos inflamables." },
+        { title:"Técnica PASS", content:"P: Pull, retira el pasador. A: Aim, apunta a la base. S: Squeeze, presiona la palanca. S: Sweep, barre de lado a lado. Mantén una salida segura a tu espalda." },
+        { title:"Condiciones para intervenir", content:"Solo intenta controlar un fuego pequeño y en etapa inicial, si tienes capacitación, visibilidad, el equipo correcto y una ruta de escape libre. Si crece o genera mucho humo, evacúa." },
+        { title:"Después de usar un extintor", content:"Aléjate con precaución, informa al responsable y solicita la recarga o reemplazo del equipo. Un extintor parcialmente utilizado debe retirarse de servicio." },
       ]},
     ],
     quiz:[
@@ -124,6 +140,10 @@ const defaultCourses = [
       { q:"Un fuego originado en líquidos inflamables (gasolina, solventes) es de clase:", options:["Clase A","Clase B","Clase C"], correct:1 },
       { q:"Al usar un extintor con la técnica PASS, debes apuntar hacia:", options:["La parte alta de las llamas","El humo","La base del fuego"], correct:2 },
       { q:"Si descubres un incendio, lo primero que debes hacer es:", options:["Intentar apagarlo siempre","Activar la alarma o avisar, y evacuar","Abrir puertas y ventanas"], correct:1 },
+      { q:"¿Qué debes hacer si el fuego crece o hay demasiado humo?", options:["Continuar hasta terminar el extintor","Evacuar y esperar a la brigada","Abrir todas las puertas"], correct:1 },
+      { q:"¿Cuál es una condición indispensable antes de usar un extintor?", options:["Tener una salida segura a la espalda","Estar solo en el área","Acercarse sin revisar el equipo"], correct:0 },
+      { q:"¿Dónde debe permanecer el personal durante el conteo?", options:["En el punto de reunión","Dentro del edificio","En el estacionamiento sin avisar"], correct:0 },
+      { q:"Después de descargar parcialmente un extintor se debe:", options:["Devolverlo sin reportarlo","Solicitar su recarga o reemplazo","Guardarlo en cualquier lugar"], correct:1 },
     ],
   },
 ];
@@ -157,6 +177,17 @@ function mergeNewDefaultCourses(){
     applied.push(dc.title);
     changed = true;
   });
+  const fireCourse = courses.find(c => c.title === 'Prevención y control de incendios');
+  if(fireCourse && !applied.includes(FIRE_COURSE_MIGRATION) && (fireCourse.modules||[]).length < 4){
+    const source = defaultCourses.find(c => c.title === fireCourse.title);
+    fireCourse.desc = source.desc;
+    fireCourse.hours = source.hours;
+    fireCourse.modules = JSON.parse(JSON.stringify(source.modules));
+    fireCourse.quiz = JSON.parse(JSON.stringify(source.quiz));
+    if(!fireCourse.image) fireCourse.image = source.image;
+    applied.push(FIRE_COURSE_MIGRATION);
+    changed = true;
+  }
   if(changed){
     saveCourses(courses);
     saveWorkers(workers);
@@ -461,7 +492,7 @@ function cardHTML(m,i){
       </div>
       <div class="module-title">${escapeHTML(m.title)}</div>
       <div class="module-desc">${escapeHTML(m.desc)}</div>
-      <div class="module-meta">⏱ <span class="hrs">${m.hours} h</span> · ${(m.modules||[]).length} módulo(s)</div>
+      <div class="module-meta">⏱ <span class="hrs">${m.hours} h</span> · ${(m.modules||[]).length} módulo(s)${m.video ? ' · 🎥 Video' : ''}</div>
       <div class="module-bar"><div style="width:${progressPct}%"></div></div>
       ${scoreLine}
       <button class="module-btn ${st.status==='completado' ? 'done' : ''}" onclick="handleModuleClick(${i})">${btnLabel}</button>
@@ -514,7 +545,7 @@ function renderSummary(){
 function openCourseContent(i){
   const course = courses[i];
   const card = document.getElementById('courseContentCard');
-  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
+  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}${course.video ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
   (course.modules||[]).forEach((mod, mi) => {
     html += `<div class="course-module">
       <div class="course-module-head" onclick="toggleCourseModule(${mi})">
@@ -534,9 +565,16 @@ function openCourseContent(i){
     });
     html += `</div></div>`;
   });
+  if(session && session.role==='admin'){
+    html += `<div class="admin-preview-quiz">
+      <div class="eyebrow">Examen final · vista previa</div>
+      <h4>Así se mostrarán las preguntas al trabajador</h4>
+      ${(course.quiz||[]).map((q,qi) => `<div class="admin-preview-question"><b>${qi+1}. ${escapeHTML(q.q)}</b><span>${q.options.length} opciones de respuesta</span></div>`).join('') || '<p class="modal-sub">Este curso todavía no tiene preguntas.</p>'}
+    </div>`;
+  }
   html += `<div class="modal-actions">
-    <button class="btn btn-ghost btn-sm" onclick="closeCourseContent()">Cerrar</button>
-    <button class="btn btn-primary btn-sm" onclick="closeCourseContent(); openQuiz(${i});">Presentar examen final</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeCourseContent()">Cerrar vista previa</button>
+    ${session && session.role!=='admin' ? `<button class="btn btn-primary btn-sm" onclick="closeCourseContent(); openQuiz(${i});">Presentar examen final</button>` : ''}
   </div>`;
   card.innerHTML = html;
   document.getElementById('courseContentOverlay').classList.remove('hidden');
@@ -601,6 +639,9 @@ function renderCourseViewer(){
 
   document.getElementById('playerTitle').textContent = course.title;
   document.getElementById('playerDesc').textContent = course.desc || '';
+  document.getElementById('playerMedia').innerHTML = course.video
+    ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>`
+    : '';
   document.getElementById('playerMeta').innerHTML = `⏱ <span class="hrs">${course.hours} h</span> · ${mods.length} módulo(s) · Examen mínimo: ${APPROVAL_THRESHOLD}%`;
   document.getElementById('playerPct').textContent = pct + '%';
   document.getElementById('playerBar').style.width = pct + '%';
@@ -726,7 +767,12 @@ function closeQuiz(){
 function renderQuizStep(){
   const course = courses[pendingQuizCourseIndex];
   const card = document.getElementById('quizCard');
-  let html = `<h3>Examen final: ${escapeHTML(course.title)}</h3><div class="modal-sub">Calificación mínima aprobatoria: ${APPROVAL_THRESHOLD}%</div>`;
+  const answered = quizAnswers.filter(a => a !== null).length;
+  let html = `<div class="quiz-card-head">
+      <div><div class="quiz-kicker">Evaluación final · CICSA</div><h3>${escapeHTML(course.title)}</h3><div class="modal-sub">Responde con atención. Necesitas ${APPROVAL_THRESHOLD}% para aprobar.</div></div>
+      <div class="quiz-progress">${answered}/${course.quiz.length}</div>
+    </div>
+    <div class="quiz-instructions"><span>ⓘ</span><span><strong>Indicaciones:</strong> selecciona una respuesta por pregunta. Puedes revisar tus selecciones antes de enviar el examen.</span></div>`;
   course.quiz.forEach((q, qi) => {
     html += `<div class="quiz-q"><p>${qi+1}. ${escapeHTML(q.q)}</p>`;
     q.options.forEach((opt, oi) => {
@@ -738,6 +784,7 @@ function renderQuizStep(){
     html += `</div>`;
   });
   html += `<div class="modal-actions">
+    <span class="quiz-submit-note">${answered < course.quiz.length ? `Faltan ${course.quiz.length - answered} por responder` : 'Todas las preguntas respondidas'}</span>
     <button class="btn btn-ghost btn-sm" onclick="closeQuiz()">Cancelar</button>
     <button class="btn btn-primary btn-sm" onclick="submitQuiz()">Enviar examen</button>
   </div>`;
@@ -947,10 +994,16 @@ async function addModule(){
   if(!title){ alert('Escribe un título para el curso.'); return; }
 
   let image = '';
+  let video = '';
   const imageInput = document.getElementById('newModImage');
   if(imageInput?.files?.[0]){
     try { image = await resizeImageFile(imageInput.files[0]); }
     catch(e){ alert('No se pudo cargar la imagen del curso.'); return; }
+  }
+  const videoInput = document.getElementById('newModVideo');
+  if(videoInput?.files?.[0]){
+    try { video = await readVideoFile(videoInput.files[0]); }
+    catch(e){ alert(e.message || 'No se pudo cargar el video del curso.'); return; }
   }
 
   const assignType = document.getElementById('newCourseAssignType').value;
@@ -964,7 +1017,7 @@ async function addModule(){
   }
 
   courses.push({
-    title, desc, hours, assignment, image,
+    title, desc, hours, assignment, image, video,
     modules:[
       { title:"Módulo 1", sections:[
         { title:"Sección 1", content:"Edita este contenido desde el botón ✏️." },
@@ -984,6 +1037,7 @@ async function addModule(){
   document.getElementById('newModTitle').value = '';
   document.getElementById('newModDesc').value = '';
   if(document.getElementById('newModImage')) document.getElementById('newModImage').value = '';
+  if(document.getElementById('newModVideo')) document.getElementById('newModVideo').value = '';
   if(document.getElementById('newModImagePreview')) document.getElementById('newModImagePreview').classList.add('hidden');
   renderAdmin();
 }
@@ -1336,6 +1390,39 @@ function renderAdminModulesTable(){
   }).join('');
 }
 
+function renderAdminCoursePreview(){
+  const grid = document.getElementById('adminCoursePreviewGrid');
+  if(!grid) return;
+  if(!courses.length){
+    grid.innerHTML = `<div style="color:var(--muted);padding:20px;">Aún no hay cursos registrados.</div>`;
+    return;
+  }
+  grid.innerHTML = courses.map((course,i) => {
+    const modules = (course.modules||[]).length;
+    const questions = Array.isArray(course.quiz) ? course.quiz.length : 0;
+    const media = course.image
+      ? `<img src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">`
+      : `<div class="preview-placeholder">📚</div>`;
+    return `<article class="admin-course-preview-card">
+      <div class="preview-media">${media}</div>
+      <div class="admin-course-preview-body">
+        <h4>${escapeHTML(course.title)}</h4>
+        <p>${escapeHTML(course.desc || 'Sin descripción.')}</p>
+        <div class="admin-course-preview-meta">⏱ ${course.hours} h · ${modules} módulo(s) · ${questions} pregunta(s)</div>
+        <button class="btn btn-blue btn-sm" onclick="openAdminCoursePreview(${i})">👁 Ver como trabajador</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function openAdminCoursePreview(index){
+  if(!session || session.role!=='admin'){
+    alert('Solo el administrador puede abrir esta vista previa.');
+    return;
+  }
+  openCourseContent(index);
+}
+
 function computeWorkerSummary(name){
   ensureWorkerRecord(name);
   const rosterEntry = roster.find(r => r.name===name);
@@ -1583,6 +1670,7 @@ function renderAdmin(){
   renderRosterTable();
   renderResetRequests();
   renderAdminModulesTable();
+  renderAdminCoursePreview();
   renderWorkersTable();
   renderQuizAdminTable();
 }
