@@ -336,6 +336,49 @@ footer b{color:var(--blue);}
 .course-module-video{display:block;width:100%;max-height:320px;border-radius:9px;margin:10px 0 14px;border:1px solid var(--border);background:#000;}
 .course-section-video{display:block;width:100%;max-width:620px;border-radius:8px;margin:10px 0 12px;border:1px solid var(--border);background:#000;}
 .editor-video{width:100%;max-width:320px;border-radius:8px;border:1px solid var(--border);background:#000;}
+
+
+/* Estilos mejorados para inputs de video */
+.editor-media-field input[type="file"][accept*="video"] {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin: 8px 0;
+  background: rgba(11,76,140,0.04);
+  border: 2px dashed rgba(11,76,140,0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+  transition: all 0.2s ease;
+}
+.editor-media-field input[type="file"][accept*="video"]:hover {
+  background: rgba(11,76,140,0.08);
+  border-color: rgba(11,76,140,0.6);
+}
+
+.editor-section-fields input[type="file"][accept*="video"] {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin: 8px 0;
+  background: rgba(11,76,140,0.04);
+  border: 2px dashed rgba(11,76,140,0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+  transition: all 0.2s ease;
+  max-width: none;
+}
+.editor-section-fields input[type="file"][accept*="video"]:hover {
+  background: rgba(11,76,140,0.08);
+  border-color: rgba(11,76,140,0.6);
+}
+.video-stored-indicator{display:block;padding:12px 14px;background:rgba(11,76,140,0.08);border:1px solid rgba(11,76,140,0.25);border-radius:6px;color:var(--blue);font-size:13px;font-weight:500;margin:8px 0;text-align:center;line-height:1.5;}
+.video-stored-indicator small{display:block;font-size:11px;color:var(--muted);margin-top:4px;font-weight:400;font-family:'IBM Plex Mono',monospace;}
 @media(max-width:700px){.editor-section-fields input[type="text"],.editor-section-fields textarea{width:100%;min-width:0}.editor-section-image{width:100%;max-width:320px}}
 
 /* ===== VISOR DE CURSO (ventana del trabajador, curso.html) ===== */

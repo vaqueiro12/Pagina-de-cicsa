@@ -149,6 +149,130 @@ const defaultCourses = [
 ];
 
 /* =========================================================
+   IndexedDB - Almacenamiento de videos local
+========================================================= */
+let dbInstance = null;
+
+function initIndexedDB(){
+  return new Promise((resolve, reject) => {
+    if(dbInstance){ return resolve(dbInstance); }
+    const request = indexedDB.open('cicsa_db', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      dbInstance = request.result;
+      resolve(dbInstance);
+    };
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('videos')){
+        db.createObjectStore('videos', { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function saveVideoToIndexedDB(videoId, blob){
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('videos', 'readwrite');
+      const store = tx.objectStore('videos');
+      store.put({ id: videoId, blob });
+      tx.oncomplete = () => resolve(videoId);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch(e){
+    console.error('Error guardando video en IndexedDB:', e);
+    throw e;
+  }
+}
+
+async function getVideoFromIndexedDB(videoId){
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('videos', 'readonly');
+      const store = tx.objectStore('videos');
+      const request = store.get(videoId);
+      request.onsuccess = () => {
+        const result = request.result;
+        if(result && result.blob){
+          resolve(URL.createObjectURL(result.blob));
+        } else {
+          resolve('');
+        }
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch(e){
+    console.error('Error recuperando video de IndexedDB:', e);
+    return '';
+  }
+}
+
+async function deleteVideoFromIndexedDB(videoId){
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('videos', 'readwrite');
+      const store = tx.objectStore('videos');
+      store.delete(videoId);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch(e){
+    console.error('Error eliminando video de IndexedDB:', e);
+  }
+}
+
+/* =========================================================
+   FUNCIONES HELPER PARA VIDEOS
+========================================================= */
+function isVideoId(value){
+  return typeof value === 'string' && value.startsWith('video_');
+}
+
+async function getVideoPreviewHtml(videoValue, videoId){
+  if(!videoValue) return '';
+  
+  // Si es un video ID, recuperar de IndexedDB y crear preview
+  if(isVideoId(videoValue)){
+    try {
+      const videoUrl = await getVideoFromIndexedDB(videoValue);
+      if(videoUrl){
+        return `<video class="editor-video" controls src="${escapeAttribute(videoUrl)}"></video>`;
+      }
+    } catch(e){
+      console.error('Error getting video preview:', e);
+    }
+    // Si no puede cargar, mostrar indicador
+    return `<div class="video-stored-indicator">✅ Video guardado (${videoValue})</div>`;
+  }
+  
+  // Si es URL antigua, mostrar directamente  
+  return `<video class="editor-video" controls src="${escapeAttribute(videoValue)}"></video>`;
+}
+
+async function displayVideoInEditor(containerId, videoValue){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = await getVideoPreviewHtml(videoValue);
+}
+
+function getVideoHtmlForEditor(videoValue){
+  if(!videoValue) return '<div class="no-course-image small">Sin video</div>';
+  
+  // Si es un video ID, mostrar indicador (no intentar reproducir)
+  if(isVideoId(videoValue)){
+    return `<div class="video-stored-indicator">✅ Video guardado en almacenamiento local<br><small>${videoValue}</small></div>`;
+  }
+  
+  // Si es URL (antigua), intentar reproducir
+  return `<video class="editor-video" controls src="${escapeAttribute(videoValue)}"></video>`;
+}
+
+
+/* =========================================================
    FUNCIONES DE LECTURA/ESCRITURA (localStorage)
 ========================================================= */
 function loadCourses(){
@@ -407,7 +531,7 @@ populateAssignAreaSelect();
 /* =========================================================
    NAVEGACIÓN
 ========================================================= */
-function showView(view){
+async function showView(view){
   if(session && session.role==='admin' && (view==='trabajador' || view==='perfil' || view==='curso')){
     view='admin';
   }
@@ -424,7 +548,7 @@ function showView(view){
     renderAdmin();
   }
   if(view==='trabajador') renderModules();
-  if(view==='curso') renderCourseViewer();
+  if(view==='curso') await renderCourseViewer();
   if(view==='perfil') renderMyProfile();
 }
 
@@ -545,7 +669,7 @@ function renderSummary(){
 function openCourseContent(i){
   const course = courses[i];
   const card = document.getElementById('courseContentCard');
-  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}${course.video ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
+  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}${course.video && !isVideoId(course.video) ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
   (course.modules||[]).forEach((mod, mi) => {
     html += `<div class="course-module">
       <div class="course-module-head" onclick="toggleCourseModule(${mi})">
@@ -554,12 +678,12 @@ function openCourseContent(i){
       </div>
       <div id="courseModuleBody${mi}">
         ${mod.image ? `<img class="course-module-image" src="${escapeAttribute(mod.image)}" alt="Imagen del módulo">` : ''}
-        ${mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(mod.video)}"></video>` : ''}`;
+        ${mod.video && !isVideoId(mod.video) ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(mod.video)}"></video>` : ''}`;
     (mod.sections||[]).forEach(sec => {
       html += `<div class="course-section">
         <div class="course-section-title">${escapeHTML(sec.title)}</div>
         ${sec.image ? `<img class="course-section-image" src="${escapeAttribute(sec.image)}" alt="Imagen de ${escapeAttribute(sec.title)}">` : ''}
-        ${sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(sec.video)}"></video>` : ''}
+        ${sec.video && !isVideoId(sec.video) ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(sec.video)}"></video>` : ''}
         <div class="course-section-content">${escapeHTML(sec.content)}</div>
       </div>`;
     });
@@ -629,7 +753,7 @@ function viewerProgressPct(course, i){
   return total === 0 ? 0 : Math.round((viewerViewedCount(course,i)/total)*100);
 }
 
-function renderCourseViewer(){
+async function renderCourseViewer(){
   if(viewerCourseIndex === null) return;
   const course = courses[viewerCourseIndex];
   const mods = course.modules || [];
@@ -639,9 +763,16 @@ function renderCourseViewer(){
 
   document.getElementById('playerTitle').textContent = course.title;
   document.getElementById('playerDesc').textContent = course.desc || '';
-  document.getElementById('playerMedia').innerHTML = course.video
-    ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>`
-    : '';
+  
+  if(course.video){
+    const videoUrl = course.video.startsWith('video_') ? await getVideoFromIndexedDB(course.video) : course.video;
+    document.getElementById('playerMedia').innerHTML = videoUrl
+      ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(videoUrl)}"></video>`
+      : '';
+  } else {
+    document.getElementById('playerMedia').innerHTML = '';
+  }
+  
   document.getElementById('playerMeta').innerHTML = `⏱ <span class="hrs">${course.hours} h</span> · ${mods.length} módulo(s) · Examen mínimo: ${APPROVAL_THRESHOLD}%`;
   document.getElementById('playerPct').textContent = pct + '%';
   document.getElementById('playerBar').style.width = pct + '%';
@@ -656,7 +787,6 @@ function renderCourseViewer(){
     scoreLine.classList.add('hidden');
   }
 
-  /* Barra lateral: estado de cada módulo */
   document.getElementById('playerModuleList').innerHTML = mods.map((mod, mi) => {
     const viewed = cp.viewed.includes(mi);
     const current = mi === viewerModule;
@@ -672,7 +802,6 @@ function renderCourseViewer(){
     ? `Recomendación: revisa los ${mods.length} módulos antes del examen.`
     : 'Listo: ya puedes presentar tu examen final.';
 
-  /* Contenido del módulo actual */
   const box = document.getElementById('playerContent');
   if(mods.length === 0){
     box.innerHTML = `<div class="player-section"><h4>Contenido en preparación</h4><p>Este curso todavía no tiene módulos. Si el examen ya está configurado, puedes presentarlo desde el panel lateral.</p></div>`;
@@ -688,19 +817,28 @@ function renderCourseViewer(){
       <h2>${escapeHTML(mod.title)}</h2>
       ${viewed ? '<span class="status-badge status-completado">✓ Visto</span>' : '<span class="status-badge status-progreso">En lectura</span>'}
     </div>
-    ${mod.image ? `<img class="course-module-image" src="${escapeAttribute(mod.image)}" alt="Imagen del módulo">` : ''}
-    ${mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(mod.video)}"></video>` : ''}`;
+    ${mod.image ? `<img class="course-module-image" src="${escapeAttribute(mod.image)}" alt="Imagen del módulo">` : ''}`;
+  
+  if(mod.video){
+    const modVideoUrl = mod.video.startsWith('video_') ? await getVideoFromIndexedDB(mod.video) : mod.video;
+    html += modVideoUrl ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(modVideoUrl)}"></video>` : '';
+  }
 
-  (mod.sections||[]).forEach((sec, si) => {
+  for(let si = 0; si < (mod.sections||[]).length; si++){
+    const sec = mod.sections[si];
+    let secVideoHtml = '';
+    if(sec.video){
+      const secVideoUrl = sec.video.startsWith('video_') ? await getVideoFromIndexedDB(sec.video) : sec.video;
+      secVideoHtml = secVideoUrl ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(secVideoUrl)}"></video>` : '';
+    }
     html += `<div class="player-section">
       <h4>${si+1}. ${escapeHTML(sec.title)}</h4>
       ${sec.image ? `<img class="course-section-image" src="${escapeAttribute(sec.image)}" alt="Imagen de ${escapeAttribute(sec.title)}">` : ''}
-      ${sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(sec.video)}"></video>` : ''}
+      ${secVideoHtml}
       <p>${escapeHTML(sec.content)}</p>
     </div>`;
-  });
+  }
 
-  /* Lo que sigue: el siguiente módulo o, en el último, el examen final */
   if(!isLast){
     const next = mods[viewerModule+1];
     html += `<div class="player-next">
@@ -730,16 +868,15 @@ function renderCourseViewer(){
 
   box.innerHTML = html;
 }
-
-function goToViewerModule(mi){
+async function goToViewerModule(mi){
   viewerModule = mi;
   getCourseProgress(session.name, viewerCourseIndex).current = mi;
   saveWorkers(workers);
-  renderCourseViewer();
+  await renderCourseViewer();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
-function markViewerModuleViewed(){
+async function markViewerModuleViewed(){
   const mods = courses[viewerCourseIndex].modules || [];
   const cp = getCourseProgress(session.name, viewerCourseIndex);
   if(!cp.viewed.includes(viewerModule)) cp.viewed.push(viewerModule);
@@ -747,7 +884,7 @@ function markViewerModuleViewed(){
   if(st.status !== 'completado') st.status = 'progreso';
   if(viewerModule < mods.length - 1){ cp.current = viewerModule + 1; viewerModule++; }
   saveWorkers(workers);
-  renderCourseViewer();
+  await renderCourseViewer();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
@@ -792,6 +929,11 @@ function renderQuizStep(){
 }
 function selectAnswer(qi, oi){ quizAnswers[qi] = oi; renderQuizStep(); }
 
+async function closeQuizAndRefresh(){
+  closeQuiz();
+  renderAll();
+  if(viewerCourseIndex!==null) await renderCourseViewer();
+}
 function submitQuiz(){
   if(quizAnswers.some(a => a===null)){ alert('Responde todas las preguntas antes de enviar.'); return; }
   const course = courses[pendingQuizCourseIndex];
@@ -926,6 +1068,92 @@ function printCertificate(name, certIndex){
 /* =========================================================
    ADMIN — CURSOS (crear, asignar, editar contenido, eliminar)
 ========================================================= */
+/* =========================================================
+   GESTOR DE VIDEOS (almacenamiento local)
+========================================================= */
+async function loadLocalVideos(){
+  const list = document.getElementById('videoListContainer');
+  if(!list) return;
+  
+  const db = await initIndexedDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('videos', 'readonly');
+    const store = tx.objectStore('videos');
+    const request = store.getAll();
+    
+    request.onsuccess = () => {
+      const videos = request.result;
+      if(videos.length === 0){
+        list.innerHTML = '<p style="color:var(--muted);font-size:13px;">No hay videos guardados aún.</p>';
+        return resolve([]);
+      }
+      
+      list.innerHTML = videos.map((v, i) => `
+        <div class="video-list-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border);">
+          <div class="video-info">
+            <div class="video-name" style="font-weight:600;font-size:13px;">${escapeHTML(v.id)}</div>
+            <div class="video-size" style="color:var(--muted);font-size:11px;">${(v.blob.size / (1024*1024)).toFixed(2)} MB</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="deleteStoredVideo('${escapeAttribute(v.id)}')">🗑 Eliminar</button>
+        </div>
+      `).join('');
+      
+      resolve(videos);
+    };
+    request.onerror = reject;
+  });
+}
+
+async function deleteStoredVideo(videoId){
+  if(!confirm('¿Eliminar este video del almacenamiento?')) return;
+  try {
+    await deleteVideoFromIndexedDB(videoId);
+    await loadLocalVideos();
+    alert('Video eliminado correctamente');
+  } catch(e) {
+    alert('Error al eliminar video: ' + e.message);
+  }
+}
+
+function renderVideoManager(){
+  const panel = document.getElementById('videoManagerPanel');
+  if(!panel) return;
+  
+  let html = `
+    <h3>Gestor de Videos Locales</h3>
+    <p class="panel-help">Aquí puedes ver todos tus videos guardados. Cuando subes un video a un curso, se almacena aquí automáticamente.</p>
+    
+    <div class="field">
+      <label>Sube un video para guardarlo</label>
+      <input type="file" accept="video/*" id="localVideoUpload" onchange="handleLocalVideoUpload(event)">
+      <small class="field-help">Máximo 25 MB. Se guardará en tu almacenamiento local.</small>
+    </div>
+    
+    <div id="videoListContainer" style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:14px;max-height:300px;overflow-y:auto;">
+      <p style="color:var(--muted);font-size:13px;">Cargando videos...</p>
+    </div>
+  `;
+  
+  panel.innerHTML = html;
+  loadLocalVideos();
+}
+
+async function handleLocalVideoUpload(event){
+  const file = event.target.files?.[0];
+  if(!file) return;
+  
+  try {
+    const videoId = await readVideoFile(file);
+    if(videoId){
+      alert('✅ Video guardado correctamente en almacenamiento local');
+      event.target.value = '';
+      await loadLocalVideos();
+    }
+  } catch(e) {
+    alert('❌ Error: ' + e.message);
+  }
+}
+
 function populatePuestoSelect(){
   const sel = document.getElementById('newWorkerArea');
   if(sel) sel.innerHTML = PUESTOS.map(p => `<option value="${escapeHTML(p)}">${escapeHTML(p)}</option>`).join('');
@@ -1088,7 +1316,7 @@ function renderCourseEditor(){
         <input type="file" accept="image/*" onchange="setModuleImage(event,${mi})">
         ${mod.image ? `<button class="btn btn-ghost btn-sm" onclick="removeModuleImage(${mi})">🗑 Quitar imagen</button>` : ''}
         <label style="margin-top:6px;">Video del módulo (opcional, máx. ${MAX_VIDEO_MB} MB)</label>
-        ${mod.video ? `<video class="editor-video" controls src="${escapeAttribute(mod.video)}"></video>` : `<div class="no-course-image small">Sin video de módulo</div>`}
+        ${mod.video ? getVideoHtmlForEditor(mod.video) : `<div class="no-course-image small">Sin video de módulo</div>`}
         <input type="file" accept="video/*" onchange="setModuleVideo(event,${mi})">
         ${mod.video ? `<button class="btn btn-ghost btn-sm" onclick="removeModuleVideo(${mi})">🗑 Quitar video</button>` : ''}
       </div>`;
@@ -1100,7 +1328,7 @@ function renderCourseEditor(){
           ${sec.image ? `<img class="editor-section-image" src="${escapeAttribute(sec.image)}" alt="Imagen de sección">` : `<div class="no-course-image small">Sin imagen de sección</div>`}
           <input type="file" accept="image/*" onchange="setSectionImage(event,${mi},${si})">
           ${sec.image ? `<button class="btn btn-ghost btn-sm" onclick="removeSectionImage(${mi},${si})">🗑 Quitar imagen</button>` : ''}
-          ${sec.video ? `<video class="editor-video" controls src="${escapeAttribute(sec.video)}"></video>` : ''}
+          ${sec.video ? getVideoHtmlForEditor(sec.video) : ''}
           <input type="file" accept="video/*" title="Anexar video a la sección" onchange="setSectionVideo(event,${mi},${si})">
           ${sec.video ? `<button class="btn btn-ghost btn-sm" onclick="removeSectionVideo(${mi},${si})">🗑 Quitar video</button>` : ''}
         </div>
@@ -1132,15 +1360,29 @@ function removeSectionImage(mi,si){ editingModules[mi].sections[si].image=''; re
 
 /* ---------- Video en módulos y secciones ---------- */
 const MAX_VIDEO_MB = 25;
-function readVideoFile(file){
-  return new Promise((resolve,reject)=>{
+async function readVideoFile(file){
+  return new Promise(async (resolve,reject)=>{
     if(!file) return resolve('');
     if(!file.type.startsWith('video/')) return reject(new Error('El archivo no es un video.'));
     if(file.size > MAX_VIDEO_MB*1024*1024) return reject(new Error(`El video supera ${MAX_VIDEO_MB} MB; súbelo más ligero o recórtalo.`));
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    
+    try {
+      const videoId = 'video_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const blob = new Blob([reader.result], { type: file.type });
+          await saveVideoToIndexedDB(videoId, blob);
+          resolve(videoId);
+        } catch(e) {
+          reject(e);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    } catch(e) {
+      reject(e);
+    }
   });
 }
 async function setModuleVideo(event, mi){
@@ -1667,6 +1909,7 @@ function saveQuizEditor(){
 
 function renderAdmin(){
   renderAdminDashboard();
+  renderVideoManager();
   renderRosterTable();
   renderResetRequests();
   renderAdminModulesTable();
