@@ -1,29 +1,24 @@
-# 📁 Carpeta de Videos
+# Carpeta de Videos
 
-Los videos en esta plataforma se guardan **localmente en tu navegador** usando IndexedDB, no en esta carpeta.
+Esta carpeta contiene todos los videos utilizados en los cursos de capacitación.
 
-## ¿Cómo usar videos?
+## Cómo usar
 
-1. **Entra como Administrador** en la plataforma
-2. **Crea o edita un curso** 
-3. **Sube un video** (máx 25 MB) desde el panel de administración
-4. El video se guarda automáticamente en **IndexedDB** (base de datos del navegador)
-5. Cuando el trabajador abre el curso, el video se muestra automáticamente
+1. **Desde el panel de administración**: Cuando subes un video a un curso, el sistema te mostrará el nombre del archivo que debes guardar aquí.
 
-## Formatos soportados:
-- MP4 (recomendado)
-- WebM
-- OGG
+2. **Descarga tu archivo**: El navegador intentará descargar el archivo de video. Guárdalo en esta carpeta `videos/` con el nombre exacto que te indicó el sistema.
 
-## Límite de tamaño:
+3. **Acceso automático**: Una vez que el archivo esté en esta carpeta, todos los trabajadores (y el administrador en vista previa) podrán verlo en el curso.
+
+## Ejemplo
+
+- Si subes un video y el sistema te dice: `"Guarda como: video_1726012345_abc123.mp4"`
+- Debes guardar el archivo en: `videos/video_1726012345_abc123.mp4`
+- El video se mostrará automáticamente en el curso
+
+## Notas importantes
+
+- Los videos deben estar en formato MP4 preferiblemente
 - Máximo 25 MB por video
-- IndexedDB permite ~50-100 MB total
-
-## Notas importantes:
-✅ Los videos persisten cuando recargas la página
-✅ Cada navegador/usuario tiene su propio almacenamiento
-✅ Los videos se guardan localmente, no en un servidor
-❌ No cargues videos directamente en esta carpeta - no funcionarán
-
----
-Última actualización: Septiembre 2026
+- Si el video no aparece, verifica que el nombre del archivo sea exacto
+- Los nombres de archivo NO deben tener espacios ni caracteres especiales
