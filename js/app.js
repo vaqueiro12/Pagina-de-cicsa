@@ -149,13 +149,23 @@ const defaultCourses = [
 ];
 
 /* =========================================================
-   VIDEOS - Servidos desde carpeta del servidor
+   VIDEOS - Almacenados en localStorage o carpeta servidor
 ========================================================= */
 const VIDEO_FOLDER = 'videos/';
 
+function getStorageVideo(videoRef){
+  if(!videoRef || !videoRef.startsWith('data:video_storage/')) return videoRef;
+  const videoId = videoRef.replace('data:video_storage/', '');
+  try {
+    const videos = JSON.parse(localStorage.getItem(LS_VIDEOS) || '{}');
+    return videos[videoId] || videoRef;
+  } catch(e){ return videoRef; }
+}
+
 function getVideoHtmlForEditor(videoValue){
   if(!videoValue) return '<div class="no-course-image small">Sin video</div>';
-  return `<video class="editor-video" controls src="${escapeAttribute(videoValue)}"></video>`;
+  const actualSrc = getStorageVideo(videoValue);
+  return `<video class="editor-video" controls src="${escapeAttribute(actualSrc)}"></video>`;
 }
 
 
@@ -556,7 +566,7 @@ function renderSummary(){
 function openCourseContent(i){
   const course = courses[i];
   const card = document.getElementById('courseContentCard');
-  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}${course.video ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
+  let html = `<h3>${escapeHTML(course.title)}</h3>${course.image ? `<img class="course-content-image" src="${escapeAttribute(course.image)}" alt="Imagen de ${escapeAttribute(course.title)}">` : ''}${course.video ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(course.video))}"></video>` : ''}<div class="modal-sub">${escapeHTML(course.desc)}</div>`;
   (course.modules||[]).forEach((mod, mi) => {
     html += `<div class="course-module">
       <div class="course-module-head" onclick="toggleCourseModule(${mi})">
@@ -565,12 +575,12 @@ function openCourseContent(i){
       </div>
       <div id="courseModuleBody${mi}">
         ${mod.image ? `<img class="course-module-image" src="${escapeAttribute(mod.image)}" alt="Imagen del módulo">` : ''}
-        ${mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(mod.video)}"></video>` : ''}`;
+        ${mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(mod.video))}"></video>` : ''}`;
     (mod.sections||[]).forEach(sec => {
       html += `<div class="course-section">
         <div class="course-section-title">${escapeHTML(sec.title)}</div>
         ${sec.image ? `<img class="course-section-image" src="${escapeAttribute(sec.image)}" alt="Imagen de ${escapeAttribute(sec.title)}">` : ''}
-        ${sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(sec.video)}"></video>` : ''}
+        ${sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(sec.video))}"></video>` : ''}
         <div class="course-section-content">${escapeHTML(sec.content)}</div>
       </div>`;
     });
@@ -653,7 +663,7 @@ async function renderCourseViewer(){
 
   if(course.video){
     document.getElementById('playerMedia').innerHTML = course.video
-      ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(course.video)}"></video>`
+      ? `<video class="course-content-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(course.video))}"></video>`
       : '';
   } else {
     document.getElementById('playerMedia').innerHTML = '';
@@ -706,14 +716,14 @@ async function renderCourseViewer(){
     ${mod.image ? `<img class="course-module-image" src="${escapeAttribute(mod.image)}" alt="Imagen del módulo">` : ''}`;
 
   if(mod.video){
-    html += mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(mod.video)}"></video>` : '';
+    html += mod.video ? `<video class="course-module-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(mod.video))}"></video>` : '';
   }
 
   for(let si = 0; si < (mod.sections||[]).length; si++){
     const sec = mod.sections[si];
     let secVideoHtml = '';
     if(sec.video){
-      secVideoHtml = sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(sec.video)}"></video>` : '';
+      secVideoHtml = sec.video ? `<video class="course-section-video" controls preload="metadata" src="${escapeAttribute(getStorageVideo(sec.video))}"></video>` : '';
     }
     html += `<div class="player-section">
       <h4>${si+1}. ${escapeHTML(sec.title)}</h4>
@@ -1159,20 +1169,32 @@ function removeSectionImage(mi,si){ editingModules[mi].sections[si].image=''; re
 
 /* ---------- Video en módulos y secciones ---------- */
 const MAX_VIDEO_MB = 25;
+const LS_VIDEOS = 'cicsa_videos_v1';
+
+function saveVideoToStorage(videoData){
+  let videos = {};
+  try { videos = JSON.parse(localStorage.getItem(LS_VIDEOS) || '{}'); }
+  catch(e){}
+  const videoId = 'vid_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  videos[videoId] = videoData;
+  localStorage.setItem(LS_VIDEOS, JSON.stringify(videos));
+  return 'data:video_storage/' + videoId;
+}
+
 async function readVideoFile(file){
   return new Promise((resolve,reject)=>{
     if(!file) return resolve('');
     if(!file.type.startsWith('video/')) return reject(new Error('El archivo no es un video.'));
     if(file.size > MAX_VIDEO_MB*1024*1024) return reject(new Error(`El video supera ${MAX_VIDEO_MB} MB; súbelo más ligero o recórtalo.`));
 
-    const filename = file.name;
-    const extension = filename.split('.').pop().toLowerCase();
-    const safeName = 'video_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9) + '.' + extension;
-    const videoPath = VIDEO_FOLDER + safeName;
-
-    alert(`📁 Guarda este archivo en la carpeta "${VIDEO_FOLDER}" de tu servidor:\n\n${safeName}\n\nDespués, el video se cargará automáticamente desde: ${videoPath}`);
-
-    resolve(videoPath);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64Data = e.target.result;
+      const videoRef = saveVideoToStorage(base64Data);
+      resolve(videoRef);
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo de video.'));
+    reader.readAsDataURL(file);
   });
 }
 async function setModuleVideo(event, mi){
